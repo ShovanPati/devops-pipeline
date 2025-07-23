@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      - echo "Installing Node.js dependencies..."
+      - npm install
+
+  build:
+    commands:
+      - echo "No build step for this app."
+
+  post_build:
+    commands:
+      - echo "Build completed successfully at `date`"
+
+artifacts:
+  files:
+    - '**/*'
+
