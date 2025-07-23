@@ -43,3 +43,8 @@ resource "aws_s3_bucket_public_access_block" "block_public_access" {
   block_public_policy     = true
   restrict_public_buckets = true
 }
+resource "aws_kms_key" "artifact_kms" {
+  description             = "KMS key for S3 bucket encryption"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+}
