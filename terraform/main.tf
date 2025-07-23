@@ -1,45 +1,45 @@
 provider "aws" {
-  region = var.region
+  region = "ap-south-1"
 }
 
 resource "aws_s3_bucket" "artifact_bucket" {
   bucket = var.bucket_name
 }
 
-resource "aws_iam_role" "codedeploy_role" {
-  name = "codedeploy-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Effect = "Allow",
-      Principal = {
-        Service = "codedeploy.amazonaws.com"
-      }
-    }]
-  })
-}
+# Enable versioning
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.artifact_bucket.id
 
-resource "aws_codedeploy_app" "app" {
-  name = "devops-app"
-  compute_platform = "Server"
-}
-
-resource "aws_codedeploy_deployment_group" "app_group" {
-  app_name = aws_codedeploy_app.app.name
-  deployment_group_name = "devops-deployment-group"
-  service_role_arn = aws_iam_role.codedeploy_role.arn
-
-  deployment_style {
-    deployment_type = "IN_PLACE"
-    deployment_option = "WITHOUT_TRAFFIC_CONTROL"
+  versioning_configuration {
+    status = "Enabled"
   }
+}
 
-  ec2_tag_set {
-    ec2_tag_filter {
-      key = "Name"
-      type = "KEY_AND_VALUE"
-      value = "MyEC2Instance"
+# Enable server-side encryption with AWS-managed key (AES256)
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
+}
+
+# Enable logging
+resource "aws_s3_bucket_logging" "logging" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  target_bucket = aws_s3_bucket.artifact_bucket.id
+  target_prefix = "log/"
+}
+
+# Public access block
+resource "aws_s3_bucket_public_access_block" "block_public_access" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
 }
